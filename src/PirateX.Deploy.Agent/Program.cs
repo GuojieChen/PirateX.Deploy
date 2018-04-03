@@ -4,6 +4,9 @@ using System.Management;
 using System.Net;
 using System.Net.Sockets;
 using Topshelf;
+using ServiceStack.Text;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace PirateX.Deploy.Agent
 {

@@ -131,7 +131,7 @@ namespace PirateX.Deploy.Command
                                 fileStream.Write(arr, 0, arr.Length);
                             }
                         }
-                        Send(progress.ToString("F"));
+                        Send(progress.ToString("F"),false);
                         if (isComplete) //下载完成跳出循环
                         {
                             break;

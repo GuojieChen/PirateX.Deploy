@@ -19,11 +19,11 @@ namespace PirateX.Deploy.Command
 
         private static readonly LogWriter logger = HostLogger.Get("Command");
 
-        public virtual void Send(string msg)
+        public virtual void Send(string msg,bool willlogger = true)
         {
             Session?.Send(msg);
 
-            if (logger.IsDebugEnabled)
+            if (willlogger && logger.IsDebugEnabled)
                 logger.Debug(msg);
         }
     }

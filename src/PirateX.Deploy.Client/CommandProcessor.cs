@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using NLog;
+﻿using NLog;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -45,7 +44,7 @@ namespace PirateX.Deploy.Client
         {
             try
             {
-                string command = LoadJson(cmdFileName);
+                string command = LoadFileContent(cmdFileName);
                 commands = command.Split(new[] { "##=##" }, StringSplitOptions.RemoveEmptyEntries);
                 commandCount = commands.Length;
                 if (commandCount <= 0)
@@ -54,8 +53,8 @@ namespace PirateX.Deploy.Client
                     return;
                 }
 
-                environment = LoadJson(environmentFileName);
-                machine = LoadJson(machineName);
+                environment = LoadFileContent(environmentFileName);
+                machine = LoadFileContent(machineName);
                 if (!ws.IsAlive)
                 {
                     ws.Connect();
@@ -77,15 +76,12 @@ namespace PirateX.Deploy.Client
             commandCount = 0;
         }
 
-        public string LoadJson(string filePath)
+        public string LoadFileContent(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
                 return "";
-            using (StreamReader r = new StreamReader(filePath))
-            {
-                string jsonCommand = r.ReadToEnd();
-                return jsonCommand;
-            }
+
+            return File.ReadAllText(filePath);
         }
 
         private void Ws_OnMessage(object sender, MessageEventArgs e)
@@ -148,7 +144,7 @@ namespace PirateX.Deploy.Client
                     Environment = environment,
                     SpecificMachine = machine
                 };
-                string cmdStr = EncryptDES(JsonConvert.SerializeObject(composeCmd),secretkey.Substring(0,8));
+                string cmdStr = EncryptDES(Serialize(composeCmd),secretkey.Substring(0,8));
 
                 ws.Send(cmdStr);
                 commandIndex++;
@@ -162,14 +158,13 @@ namespace PirateX.Deploy.Client
         /// <summary>
         /// 进行DES加密
         /// </summary>
-        /// <param name="pToEncrypt">要加密的字符串</param>
+        /// <param name="inputByteArray">字节数组</param>
         /// <param name="key">密钥，必须为8位</param>
         /// <returns>以Base64格式返回的加密字符串</returns>
-        static string EncryptDES(string pToEncrypt, string sKey)
+        static string EncryptDES(byte[] inputByteArray, string sKey)
         {
-            using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+            using (DESCryptoServiceProvider des = new DESCryptoServiceProvider()) 
             {
-                byte[] inputByteArray = Encoding.UTF8.GetBytes(pToEncrypt);
                 des.Key = ASCIIEncoding.ASCII.GetBytes(sKey);
                 des.IV = ASCIIEncoding.ASCII.GetBytes(sKey);
                 using (MemoryStream ms = new System.IO.MemoryStream())
@@ -183,6 +178,16 @@ namespace PirateX.Deploy.Client
                     string str = Convert.ToBase64String(ms.ToArray());
                     return str;
                 }
+            }
+        }
+
+        static byte[] Serialize<T>(T t)
+        {
+            using (var ms = new MemoryStream())
+            {
+                ProtoBuf.Serializer.Serialize(ms, t);
+
+                return ms.ToArray();
             }
         }
     }

@@ -26,6 +26,9 @@ namespace PirateX.Deploy.Command
             //http://192.168.1.94:8080/job/baby/view/dev/job/gameserver/build?delay=0sec
             //http://192.168.1.94:8080/job/baby/view/dev/job/gameserver/lastBuild/api/json?tree=result,executor[progress]
 
+            if (source.IndexOf("http://") < 0)
+                source = $"http://{source}";
+
             var buildTask = PostJenkinsBuild(source, job, credential);
             string buildResponse = buildTask.Result;
 
@@ -42,13 +45,13 @@ namespace PirateX.Deploy.Command
                         continue;
                     if (model.result == "SUCCESS")
                     {
-                        Send("100");
+                        Send("100",false);
                         building = false;
                     }
                     else
                     {
                         int progress = model.executor.progress;
-                        Send(progress.ToString());
+                        Send(progress.ToString(), false);
                     }
                     Thread.Sleep(200);
                 }
@@ -74,7 +77,7 @@ namespace PirateX.Deploy.Command
             var header = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
             client.DefaultRequestHeaders.Authorization = header;
             string progressUrl =
-                $"http://{source}/job/{job}/lastBuild/api/json?tree=result,executor[progress]";
+                $"{source}/job/{job}/lastBuild/api/json?tree=result,executor[progress]";
             var httpMessge = await client.GetAsync(progressUrl);
             string progressMsg = await httpMessge.Content.ReadAsStringAsync();
             return progressMsg;
@@ -90,7 +93,7 @@ namespace PirateX.Deploy.Command
             var byteArray = Encoding.ASCII.GetBytes(credential);
             var header = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
             client.DefaultRequestHeaders.Authorization = header;
-            string buildUrl = $"http://{source}/job/{job}/build?delay=0sec";
+            string buildUrl = $"{source}/job/{job}/build?delay=0sec";
             var response = await client.PostAsync(buildUrl, null);
             response.EnsureSuccessStatusCode();
             var responseString = await response.Content.ReadAsStringAsync();

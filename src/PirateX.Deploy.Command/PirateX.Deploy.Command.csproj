@@ -105,7 +105,6 @@
     <Compile Include="CommandBase.cs" />
     <Compile Include="CommandKeyAttribute.cs" />
     <Compile Include="CommandNameAttribute.cs" />
-    <Compile Include="ComposeCommand.cs" />
     <Compile Include="DeleteDownloadCommand.cs" />
     <Compile Include="DeletePoolCommand.cs" />
     <Compile Include="DeleteSiteCommand.cs" />

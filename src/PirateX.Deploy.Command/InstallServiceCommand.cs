@@ -16,10 +16,11 @@ namespace PirateX.Deploy.Command
                 throw new Exception("download command param error");
             }
             var packageName = hobj.GetKey("PackageName").GetString();
-            var programName = hobj.GetKey("ProgramName")?.GetString()?? $"{packageName}.exe";
+            var programName = hobj.GetKey("ProgramName")?.GetString() ?? $"{packageName}.exe";
             var serviceName = hobj.GetKey("ServiceName").GetString();
             var servicepath = hobj.GetKey("Path")?.GetString() ?? "default";
-            
+            var start = hobj.GetKey("Start")?.GetString() ?? "auto";
+
             var service = QueryService(serviceName);
             if (service != null)
                 return $"service {serviceName} existed, need no install operation!";
@@ -33,7 +34,7 @@ namespace PirateX.Deploy.Command
             var installCmd = new OriginCommand();
 
             installCmd.Name = "sc"; //Runner.DefaultFilePath + packageName + "\\" + programName;
-            installCmd.Param = $"create {serviceName} binPath=\"" + Path.Combine(servicepath,programName) +"\"";
+            installCmd.Param = $"create {serviceName} binPath= \"{Path.Combine(servicepath, programName)}\" start= {start}";
             CommandExecutor.RunCommand(installCmd);
             return $"{installCmd.Name} {installCmd.Param}";
         }

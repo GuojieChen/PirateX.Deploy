@@ -16,6 +16,8 @@ using PirateX.Deploy.Command;
 using System.Security.Cryptography;
 using System.Text;
 using System.IO;
+using ProtoBuf;
+using ServiceStack.Text;
 
 namespace PirateX.Deploy.Agent
 {
@@ -87,7 +89,7 @@ namespace PirateX.Deploy.Agent
 
         private void NewMessageReceived(WebSocketSession session, string value)
         {
-            var orign = string.Empty;
+            byte[] orign = null;
             try
             {
                 orign = DecryptDES(value, secretkey.Substring(0, 8));
@@ -107,7 +109,7 @@ namespace PirateX.Deploy.Agent
         private static bool isProcessing = false;
         private const string ComamndEnd = "===command operation end===";
 
-        public static void ProcessData(WebSocketSession session, string data)
+        public static void ProcessData(WebSocketSession session, byte[] data)
         {
             if (isProcessing)//同时只能执行一次指令
             {
@@ -118,13 +120,14 @@ namespace PirateX.Deploy.Agent
             isProcessing = true;
             try
             {
-                var composeCmd = JsonConvert.DeserializeObject<ComposeCommand>(data);
+                var composeCmd = Deserialize<ComposeCommand>(data);
                 string cmd = composeCmd.Command;
                 string env = composeCmd.Environment;
                 string machine = composeCmd.SpecificMachine;
 
-                EnvironmentConfig = ParseVariable(env);
-                MachineConfig = ParseVariable(machine);
+                EnvironmentConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(env.Replace("\\","\\\\"))??new Dictionary<string, string>();
+                MachineConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(machine.Replace("\\", "\\\\")) ?? new Dictionary<string, string>();
+
                 //TODO 需要达到机器参数优先，环境参数其次
                 cmd = ReplaceVarialbe(cmd, EnvironmentConfig, MachineConfig);
 
@@ -141,25 +144,6 @@ namespace PirateX.Deploy.Agent
                 EnvironmentConfig = null;
                 session.Send(ComamndEnd);
             }
-        }
-
-        private static Dictionary<string, string> ParseVariable(string varStr)
-        {
-            var varDict = new Dictionary<string, string>();
-            if (!string.IsNullOrEmpty(varStr)) //环境变量
-            {
-                var kvObj = JObject.Parse(varStr);
-                foreach (var kv in kvObj.Properties())
-                {
-                    string key = kv.Name;
-                    string value = kv.Value.Value<string>();
-                    if (key.StartsWith("${") && key.EndsWith("}"))
-                    {
-                        varDict[key] = value;
-                    }
-                }
-            }
-            return varDict;
         }
 
         private static string ReplaceVarialbe(string cmd, Dictionary<string, string> envDict, Dictionary<string, string> machineDict)
@@ -274,7 +258,7 @@ namespace PirateX.Deploy.Agent
             logger.Debug($"session closed! {session.RemoteEndPoint}\t{session.SessionID}");
         }
 
-        static string DecryptDES(string pToDecrypt, string sKey)
+        static byte[] DecryptDES(string pToDecrypt, string sKey)
         {
             byte[] inputByteArray = Convert.FromBase64String(pToDecrypt);
             using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
@@ -288,10 +272,16 @@ namespace PirateX.Deploy.Agent
                         cs.Write(inputByteArray, 0, inputByteArray.Length);
                         cs.FlushFinalBlock();
                     }
-                    string str = Encoding.UTF8.GetString(ms.ToArray());
-
-                    return str;
+                    return ms.ToArray();
                 }
+            }
+        }
+
+        private static T Deserialize<T>(byte[] input)
+        {
+            using (var ms = new MemoryStream(input))
+            {
+                return Serializer.Deserialize<T>(ms);
             }
         }
     }
