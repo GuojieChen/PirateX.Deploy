@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("delete-download")]
+    [CommandName("delete-file",Description = "删除文件")]
     public class DeleteDownloadCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

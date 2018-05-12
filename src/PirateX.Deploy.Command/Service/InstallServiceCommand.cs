@@ -5,7 +5,7 @@ using System.ServiceProcess;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("install-service")]
+    [CommandName("install-service",Description = "安装服务")]
     public class InstallServiceCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

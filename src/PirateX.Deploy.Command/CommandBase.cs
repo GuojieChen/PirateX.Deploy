@@ -1,5 +1,6 @@
 ﻿using Akka.Configuration.Hocon;
 using SuperWebSocket;
+using System.Collections.Generic;
 using Topshelf.Logging;
 
 namespace PirateX.Deploy.Command
@@ -9,11 +10,16 @@ namespace PirateX.Deploy.Command
         WebSocketSession Session { get; set; }
 
         string Execute(IHoconElement param);
+
+        Dictionary<string, string> EnvironmentConfig { get; set; }
+        Dictionary<string, string> MachineConfig { get; set; }
     }
 
     public abstract class CommandBase : ICommand
     {
         public WebSocketSession Session { get; set; }
+        public Dictionary<string, string> EnvironmentConfig { get; set; }
+        public Dictionary<string, string> MachineConfig { get; set; }
 
         public abstract string Execute(IHoconElement param);
 

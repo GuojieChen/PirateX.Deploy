@@ -4,7 +4,7 @@ using System.Net;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("file-download")]
+    [CommandName("file-download",Description ="下载文件")]
     public class DownloadCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

@@ -2,7 +2,7 @@
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("uninstall-service")]
+    [CommandName("uninstall-service",Description ="卸载服务")]
     public class UninstallServiceCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

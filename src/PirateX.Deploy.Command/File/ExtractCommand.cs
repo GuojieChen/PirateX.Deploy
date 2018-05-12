@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("extract")]
+    [CommandName("extract",Description = "解压压缩包")]
     public class ExtractCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
@@ -22,9 +22,9 @@ namespace PirateX.Deploy.Command
             var packageName = hobj.GetKey("PackageName").GetString();
             var version = hobj.GetKey("Version")?.GetString() ?? "latest";
             var extractPath = hobj.GetKey("Path")?.GetString() ?? "default";
-            var configStay = hobj.GetKey("ConfigStay")?.GetBoolean() ?? false;
             var force = hobj.GetKey("Force")?.GetBoolean() ?? false;
             var processName = hobj.GetKey("ProcessName")?.GetString();
+
             if (extractPath == "default")
             {
                 extractPath = Path.Combine(CommandExecutor.WorkSpace, packageName); //Runner.DefaultFilePath + packageName;
@@ -46,7 +46,7 @@ namespace PirateX.Deploy.Command
             {
                 try
                 {
-                    return ExtractZip(zipPath, extractPath, configStay);
+                    return ExtractZip(zipPath, extractPath);
                 }
                 catch (Exception ex)
                 {
@@ -72,12 +72,12 @@ namespace PirateX.Deploy.Command
                 {
                     t.Kill();
                 }
-                msg += ExtractZip(zipPath, extractPath, configStay);
+                msg += ExtractZip(zipPath, extractPath);
             }
             return msg;
         }
 
-        private string ExtractZip(string zipPath, string extractPath, bool configStay)
+        private string ExtractZip(string zipPath, string extractPath)
         {
             using (var archive = ZipFile.OpenRead(zipPath))
             {
@@ -94,24 +94,11 @@ namespace PirateX.Deploy.Command
                             Directory.CreateDirectory(subDir);
                         }
                     }
-                    if (IsConfigOverwrite(entry.FullName) || !configStay)//对特定的.config文件并且指定不覆盖时，跳过覆盖步骤
-                    {
-                        entry.ExtractToFile(filePath, true);
-                    }
+
+                    entry.ExtractToFile(filePath, true);
                 }
             }
             return $"extract {zipPath} to {extractPath} success!";
-        }
-
-        private bool IsConfigOverwrite(string name)
-        {
-            if (name.EndsWith("exe.config"))
-                return false;
-            if (name.EndsWith("Web.config"))
-                return false;
-            if (name.EndsWith("NLog.config"))
-                return false;
-            return true;
         }
 
         private string GetZipPath(string packageName, string version)

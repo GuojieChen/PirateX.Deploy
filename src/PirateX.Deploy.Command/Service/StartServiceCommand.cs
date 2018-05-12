@@ -4,7 +4,7 @@ using System.ServiceProcess;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("start-service")]
+    [CommandName("start-service",Description ="启动服务")]
     public class StartServiceCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

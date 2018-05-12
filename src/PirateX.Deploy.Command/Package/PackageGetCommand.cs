@@ -1,5 +1,4 @@
 ﻿using Akka.Configuration.Hocon;
-using PirateX.Deploy.Common;
 using System;
 using System.IO;
 using System.Net;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("package-get")]
+    [CommandName("package-get",Description ="获取包")]
     public class PackageGetCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
@@ -78,6 +77,8 @@ namespace PirateX.Deploy.Command
         public async Task<string> DownloadFileAsync(HttpClient client, string url, string dir)
         {
             var token = new CancellationTokenSource();
+
+            base.Send(url);
             var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, token.Token);
 
             if (!response.IsSuccessStatusCode)
@@ -159,8 +160,5 @@ namespace PirateX.Deploy.Command
             if (!isReceived) throw new Exception("http request timeout!");
             return reciveCount;
         }
-
-
-
     }
 }

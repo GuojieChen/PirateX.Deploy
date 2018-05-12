@@ -10,5 +10,7 @@ namespace PirateX.Deploy.Command
             CommandName = name;
         }
         public string CommandName { get; set; }
+
+        public string Description { get; set; }
     }
 }

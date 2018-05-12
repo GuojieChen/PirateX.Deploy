@@ -4,15 +4,15 @@ using System;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("new-pool")]
-    public class NewPoolCommand : CommandBase
+    [CommandName("change-pool",Description ="修改IIS应用程序池")]
+    public class ChangePoolCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
         {
             var hobj = param as HoconObject;
             if (hobj == null)
             {
-                throw new Exception("new-pool command param error");
+                throw new Exception("change-pool command param error");
             }
             var name = hobj.GetKey("Name").GetString();
             var identityType = hobj.GetKey("IdentityType")?.GetString() ?? "NetworkService";
@@ -38,27 +38,27 @@ namespace PirateX.Deploy.Command
                 default:
                     throw new Exception($"IdentityType {identityType} set error");
             }
-            var msg = CreateAppPool(name, version, itype);
+            var msg = ChangeAppPool(name, version, itype);
             return msg;
         }
-
-        private string CreateAppPool(string poolname, string runtimeVersion, ProcessModelIdentityType type)
+        private string ChangeAppPool(string poolname, string runtimeVersion, ProcessModelIdentityType type)
         {
             using (ServerManager serverManager = new ServerManager())
             {
                 var pools = serverManager.ApplicationPools;
                 var pool = pools[poolname];
-                if (pool != null)
-                    return $"pool {poolname} exist! need no create.";
-                ApplicationPool newPool = serverManager.ApplicationPools.Add(poolname);
-                newPool.ManagedRuntimeVersion = runtimeVersion;
-                newPool.Enable32BitAppOnWin64 = true;
-                newPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
-                newPool.ProcessModel.IdentityType = type;
-                newPool.AutoStart = true;
+                if (pool == null)
+                    return $"pool {poolname} not exist! can not change.";
+                pool.Stop();
+                pool.ManagedRuntimeVersion = runtimeVersion;
+                pool.Enable32BitAppOnWin64 = true;
+                pool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
+                pool.ProcessModel.IdentityType = type;
+                pool.AutoStart = true;
+                pool.Start();
                 serverManager.CommitChanges();
             }
-            return $"pool {poolname} create success!";
+            return $"pool {poolname} change success!";
         }
     }
 }

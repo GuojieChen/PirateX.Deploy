@@ -71,7 +71,6 @@ namespace PirateX.Deploy.Agent
             wss.NewSessionConnected += NewSessionConnected;
             wss.NewMessageReceived += NewMessageReceived;
             wss.Setup(port);
-
             logger.Info($"websocekt : ws://*:{port}");
 
             if (!wss.Start())
@@ -186,12 +185,13 @@ namespace PirateX.Deploy.Agent
                     var v = hitem.Value.Values[0];
                     try
                     {
-                        session.Send($"processing command [{key}] ...");
+                        session.Send($">>>>>>>>>>>>>>>>processing [{key}] >>>>>>>>>>>>>>>>");
                         string response = DispatchHoconCommand(session, commandTypes, key, v);
                         if (session.Connected)
                         {
                             //SendResponse(session, "CommandResponse", response);
                             session.Send(response);
+                            session.Send("------------------------------------");
                         }
                     }
                     catch (Exception ex)
@@ -239,6 +239,8 @@ namespace PirateX.Deploy.Agent
                 {
                     var cmd = (ICommand)Activator.CreateInstance(commandType);
                     cmd.Session = session;
+                    cmd.EnvironmentConfig = EnvironmentConfig;
+                    cmd.MachineConfig = MachineConfig;
                     return cmd.Execute(param);
                 }
             }

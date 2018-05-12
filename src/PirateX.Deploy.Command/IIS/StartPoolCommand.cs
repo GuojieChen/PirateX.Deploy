@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Akka.Configuration.Hocon;
+﻿using Akka.Configuration.Hocon;
 using Microsoft.Web.Administration;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("stop-pool")]
-    public class StopPoolCommand:CommandBase
+    [CommandName("start-pool",Description ="启动应用程序池")]
+    public class StartPoolCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
         {
@@ -19,10 +14,10 @@ namespace PirateX.Deploy.Command
                 var pools = serverManager.ApplicationPools;
                 var pool = pools[poolName];
                 if (pool == null)
-                    return $"pool {poolName} not exist! can not stop";
-                if (pool.State == ObjectState.Started)
+                    return $"pool {poolName} not exist! can not start";
+                if (pool.State == ObjectState.Stopped)
                 {
-                    pool.Stop();
+                    pool.Start();
                 }
                 else
                 {
@@ -30,7 +25,7 @@ namespace PirateX.Deploy.Command
                 }
                 serverManager.CommitChanges();
             }
-            return $"pool {poolName} stop success!";
+            return $"pool {poolName} start success!";
         }
     }
 }

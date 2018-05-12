@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("jenkins-build")]
+    [CommandName("jenkins-build",Description ="Jenkins编译项目")]
     public class JenkinsBuildCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
@@ -22,9 +22,6 @@ namespace PirateX.Deploy.Command
             var source = hobj.GetKey("Source")?.GetString();
             var job = hobj.GetKey("JobName").GetString();
             var credential = hobj.GetKey("Credential")?.GetString();
-
-            //http://192.168.1.94:8080/job/baby/view/dev/job/gameserver/build?delay=0sec
-            //http://192.168.1.94:8080/job/baby/view/dev/job/gameserver/lastBuild/api/json?tree=result,executor[progress]
 
             if (source.IndexOf("http://") < 0)
                 source = $"http://{source}";

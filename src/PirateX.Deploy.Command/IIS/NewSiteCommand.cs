@@ -4,7 +4,7 @@ using System;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("new-site")]
+    [CommandName("new-site",Description ="新建站点")]
     public class NewSiteCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
@@ -16,14 +16,13 @@ namespace PirateX.Deploy.Command
             }
             var siteName = hobj.GetKey("SiteName").GetString();
             var poolName = hobj.GetKey("PoolName").GetString();
-            var hostName = hobj.GetKey("HostName")?.GetString() ?? "";
+            var binding  = hobj.GetKey("Binding").GetString(); // http://yourdoman.com:96
             var path = hobj.GetKey("PhysicPath").GetString();
-            var port = hobj.GetKey("Port")?.GetInt() ?? 80;
-            var msg = CreateWebsite(siteName, poolName, port, path, hostName);
+            var msg = CreateWebsite(siteName, poolName, path, binding);
             return msg;
         }
 
-        private string CreateWebsite(string websiteName, string appPool, int port, string phyPath, string hostname)
+        private string CreateWebsite(string websiteName, string appPool, string phyPath, string binding)
         {
             using (ServerManager iisManager = new ServerManager())
             {
@@ -31,7 +30,20 @@ namespace PirateX.Deploy.Command
                     return $"website {websiteName} exist! need no create.";
                 if (iisManager.ApplicationPools[appPool] == null)
                     throw new Exception($"pool {appPool} not exist! can not create website {websiteName}");
-                string bindingInfo = "*:" + port + ":" + hostname;
+
+                string port = "80";
+                string host = binding;
+                var index = binding.IndexOf(':');
+                if (index >= 0)
+                {
+                    port = binding.Substring(index + 1, binding.Length - index - 1);
+                    if (index > 0)
+                        host = binding.Substring(0, index);
+                    else
+                        host = "";
+                }
+
+                string bindingInfo = "*:" + port + ":" + host;
                 iisManager.Sites.Add(websiteName, "http", bindingInfo, phyPath);
                 iisManager.Sites[websiteName].ApplicationDefaults.ApplicationPoolName = appPool;
                 foreach (var item in iisManager.Sites[websiteName].Applications)

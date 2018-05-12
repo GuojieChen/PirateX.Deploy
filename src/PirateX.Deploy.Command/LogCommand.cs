@@ -7,7 +7,7 @@ using Akka.Configuration.Hocon;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("log")]
+    [CommandName("log",Description = "打印信息")]
     public class LogCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

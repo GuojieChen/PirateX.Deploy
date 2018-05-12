@@ -1,10 +1,11 @@
 ﻿using Akka.Configuration.Hocon;
 using Microsoft.Web.Administration;
+using System.Threading;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("stop-site")]
-    public class StopSiteCommand:CommandBase
+    [CommandName("start-site",Description ="启动站点")]
+    public class StartSiteCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
         {
@@ -14,10 +15,11 @@ namespace PirateX.Deploy.Command
                 var sites = serverManager.Sites;
                 var site = sites[siteName];
                 if (site == null)
-                    return $"site {siteName} not exist! can not stop!";
-                if (site.State == ObjectState.Started)
+                    return $"site {siteName} not exist! can not start";
+                Thread.Sleep(200);//让site有准备的时间，sites为Lazy加载,否则有可能在site.State调用出错（not a valid object）
+                if (site.State == ObjectState.Stopped)
                 {
-                    site.Stop();
+                    site.Start();
                 }
                 else
                 {
@@ -25,7 +27,8 @@ namespace PirateX.Deploy.Command
                 }
                 serverManager.CommitChanges();
             }
-            return $"site {siteName} stop success!";
+            return $"site {siteName} start success!";
         }
     }
+    
 }

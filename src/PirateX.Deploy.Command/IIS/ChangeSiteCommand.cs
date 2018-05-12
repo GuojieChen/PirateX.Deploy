@@ -4,7 +4,7 @@ using System;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("change-site")]
+    [CommandName("change-site",Description ="修改IIS web站点")]
     public class ChangeSiteCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

@@ -3,7 +3,7 @@ using Microsoft.Web.Administration;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("delete-pool")]
+    [CommandName("delete-pool",Description ="删除应用程序池")]
     public class DeletePoolCommand : CommandBase
     {
         public override string Execute(IHoconElement param)

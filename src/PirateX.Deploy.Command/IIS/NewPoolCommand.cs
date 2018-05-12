@@ -4,15 +4,15 @@ using System;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("change-pool")]
-    public class ChangePoolCommand : CommandBase
+    [CommandName("new-pool",Description ="新建应用程序池")]
+    public class NewPoolCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
         {
             var hobj = param as HoconObject;
             if (hobj == null)
             {
-                throw new Exception("change-pool command param error");
+                throw new Exception("new-pool command param error");
             }
             var name = hobj.GetKey("Name").GetString();
             var identityType = hobj.GetKey("IdentityType")?.GetString() ?? "NetworkService";
@@ -38,27 +38,27 @@ namespace PirateX.Deploy.Command
                 default:
                     throw new Exception($"IdentityType {identityType} set error");
             }
-            var msg = ChangeAppPool(name, version, itype);
+            var msg = CreateAppPool(name, version, itype);
             return msg;
         }
-        private string ChangeAppPool(string poolname, string runtimeVersion, ProcessModelIdentityType type)
+
+        private string CreateAppPool(string poolname, string runtimeVersion, ProcessModelIdentityType type)
         {
             using (ServerManager serverManager = new ServerManager())
             {
                 var pools = serverManager.ApplicationPools;
                 var pool = pools[poolname];
-                if (pool == null)
-                    return $"pool {poolname} not exist! can not change.";
-                pool.Stop();
-                pool.ManagedRuntimeVersion = runtimeVersion;
-                pool.Enable32BitAppOnWin64 = true;
-                pool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
-                pool.ProcessModel.IdentityType = type;
-                pool.AutoStart = true;
-                pool.Start();
+                if (pool != null)
+                    return $"pool {poolname} exist! need no create.";
+                ApplicationPool newPool = serverManager.ApplicationPools.Add(poolname);
+                newPool.ManagedRuntimeVersion = runtimeVersion;
+                newPool.Enable32BitAppOnWin64 = true;
+                newPool.ManagedPipelineMode = ManagedPipelineMode.Integrated;
+                newPool.ProcessModel.IdentityType = type;
+                newPool.AutoStart = true;
                 serverManager.CommitChanges();
             }
-            return $"pool {poolname} change success!";
+            return $"pool {poolname} create success!";
         }
     }
 }

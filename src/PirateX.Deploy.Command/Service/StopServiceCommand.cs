@@ -4,7 +4,7 @@ using System.ServiceProcess;
 
 namespace PirateX.Deploy.Command
 {
-    [CommandName("stop-service")]
+    [CommandName("stop-service",Description ="停止服务")]
     public class StopServiceCommand : CommandBase
     {
         public override string Execute(IHoconElement param)
