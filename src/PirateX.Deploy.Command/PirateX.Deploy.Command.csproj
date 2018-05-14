@@ -109,6 +109,7 @@
     <Compile Include="File\DeleteFileCommand.cs" />
     <Compile Include="IIS\DeletePoolCommand.cs" />
     <Compile Include="IIS\DeleteSiteCommand.cs" />
+    <Compile Include="IIS\NewApplicationCommand.cs" />
     <Compile Include="Net\DownloadCommand.cs" />
     <Compile Include="File\ExtractCommand.cs" />
     <Compile Include="Package\PackageDeleteCommand.cs" />
