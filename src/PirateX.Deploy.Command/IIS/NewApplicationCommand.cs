@@ -35,6 +35,8 @@ namespace PirateX.Deploy.Common.IIS
 
                 site.Applications.Add(application,path);
 
+
+                iisManager.CommitChanges();
                 return $"application {application} create success!";
             }
         }
