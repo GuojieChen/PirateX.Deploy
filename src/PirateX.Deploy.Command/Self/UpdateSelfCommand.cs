@@ -27,8 +27,14 @@ namespace PirateX.Deploy.Command
 
             string para = $"{feedName} {groupName} {version} {credential} {progetSource}";
 
-
             var downloadTask = PackageGetCommand.DownLoadPackage(base.Session, feedName, groupName, packageName, version, credential, progetSource);
+
+            while (!downloadTask.IsCompleted)
+            {
+                base.Send("downloadTask not completed");
+
+                Thread.Sleep(1000);
+            }
 
             if (string.IsNullOrEmpty(downloadTask.Result))
                 return "download package fail!";
@@ -38,7 +44,7 @@ namespace PirateX.Deploy.Command
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("echo off");
             stringBuilder.AppendLine("net stop PirateX.Deploy.Agent");
-            stringBuilder.AppendLine($"7z x \"{downloadTask.Result}\" -y o \"{AppDomain.CurrentDomain.BaseDirectory}\"");
+            stringBuilder.AppendLine($"7z x \"{downloadTask.Result}\" -y o\"{AppDomain.CurrentDomain.BaseDirectory}\"");
             stringBuilder.AppendLine($"net start PirateX.Deploy.Agent");
 
             var content = stringBuilder.ToString();
