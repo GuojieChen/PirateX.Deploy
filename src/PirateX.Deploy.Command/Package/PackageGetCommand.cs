@@ -1,4 +1,5 @@
 ﻿using Akka.Configuration.Hocon;
+using SuperWebSocket;
 using System;
 using System.IO;
 using System.Net;
@@ -25,11 +26,11 @@ namespace PirateX.Deploy.Command
             var credential = hobj.GetKey("Credential")?.GetString();
             var progetSource = hobj.GetKey("Source")?.GetString() ;
             var target = hobj.GetKey("Target")?.GetString();//目标路径
-            var downloadTask = DownLoadPackage(feedName, groupName, packageName, version, credential, progetSource);
+            var downloadTask = DownLoadPackage(base.Session,feedName, groupName, packageName, version, credential, progetSource);
             return downloadTask.Result;
         }
 
-        internal async Task<string> DownLoadPackage(string feedName, string groupName, string packageName, string version, string credential, string source)
+        public static async Task<string> DownLoadPackage(WebSocketSession Session, string feedName, string groupName, string packageName, string version, string credential, string source)
         {
             string dir = Path.Combine(CommandExecutor.WorkSpace, "Packages");//$"{Runner.DefaultFilePath}Packages\\";
             if (!Directory.Exists(dir))
@@ -70,15 +71,15 @@ namespace PirateX.Deploy.Command
                 UseProxy = false
             };
             var httpClient = new HttpClient(handler);
-            string result = await DownloadFileAsync(httpClient, url, dir);
+            string result = await DownloadFileAsync(Session,httpClient, url, dir);
             return result;
         }
 
-        public async Task<string> DownloadFileAsync(HttpClient client, string url, string dir)
+        public static async Task<string> DownloadFileAsync(WebSocketSession Session,HttpClient client, string url, string dir)
         {
             var token = new CancellationTokenSource();
 
-            base.Send(url);
+            Session.Send(url);
             var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, token.Token);
 
             if (!response.IsSuccessStatusCode)
@@ -102,9 +103,11 @@ namespace PirateX.Deploy.Command
                 string filePath = Path.Combine(dir, fileName);//$"{dir}{fileName}";
                 if (File.Exists(filePath))
                 {
-                    return $"file {fileName} existed, need no download";
+                    Session.Send($"file {fileName} existed, need no download");
+
+                    return filePath;
                 }
-                Send("$Prepare Progress Bar$");
+                Session.Send("$Prepare Progress Bar$");
 
                 using (var memoryStream = new MemoryStream(1000 * 1000 * 4))
                 {
@@ -132,27 +135,31 @@ namespace PirateX.Deploy.Command
                                 fileStream.Write(arr, 0, arr.Length);
                             }
                         }
-                        Send(progress.ToString("F"),false);
+                        Session.Send(progress.ToString("F"),false);
                         if (isComplete) //下载完成跳出循环
                         {
                             break;
                         }
                     } while (true);
                 }
-                Send("$Finish Progress Bar$");
+                Session.Send("$Finish Progress Bar$");
                 Thread.Sleep(300);
                 if (isComplete)
                 {
-                    return $"download {fileName} success!";
+                    Session.Send($"download {fileName} success!");
+
+                    return filePath;
                 }
-                return $"error: download {fileName} failure!";
+                Session.Send($"error: download {fileName} failure!");
+
+                return string.Empty;
             }
         }
 
         /// <summary>
         /// 异步读取超时封装处理
         /// </summary>
-        public async Task<int> ReadAsync(Stream stream, byte[] buffer, int offset, int count, int timeout)
+        public static async Task<int> ReadAsync(Stream stream, byte[] buffer, int offset, int count, int timeout)
         {
             var reciveCount = 0;
             var receiveTask = Task.Run(async () => { reciveCount = await stream.ReadAsync(buffer, offset, count); });

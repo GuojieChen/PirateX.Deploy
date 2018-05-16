@@ -20,6 +20,7 @@ namespace PirateX.Deploy.Command
             var serviceName = hobj.GetKey("ServiceName").GetString();
             var servicepath = hobj.GetKey("Path")?.GetString() ?? "default";
             var start = hobj.GetKey("Start")?.GetString() ?? "auto";
+            var args = hobj.GetKey("Args").GetString();//额外的参数
 
             var service = QueryService(serviceName);
             if (service != null)
