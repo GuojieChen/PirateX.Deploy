@@ -166,7 +166,6 @@ namespace PirateX.Deploy.Agent
         }
 
         #region HOCON
-
         private static void ProcessHoconCommand(string cmd, WebSocketSession session)
         {
             var config = ConfigurationFactory.ParseString(cmd, IncludeAttach);
@@ -186,6 +185,11 @@ namespace PirateX.Deploy.Agent
                     try
                     {
                         session.Send($">>>>>>>>>>>>>>>>processing [{key}] >>>>>>>>>>>>>>>>");
+
+                        var blockindex = key.IndexOf(' ');
+                        if (blockindex > 0)
+                            key = key.Substring(0, blockindex);
+
                         string response = DispatchHoconCommand(session, commandTypes, key, v);
                         if (session.Connected)
                         {

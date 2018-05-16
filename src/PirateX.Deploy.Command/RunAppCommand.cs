@@ -40,6 +40,9 @@ namespace PirateX.Deploy.Command
         {
             var filename = $"temp_{DateTime.Now.Ticks}.bat";
             var content = param.GetString();
+
+            base.Send(content);
+
             var bytes = Encoding.UTF8.GetBytes("@echo off\r\n"+content);
 
             using (var ms = File.Create(filename))
