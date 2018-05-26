@@ -45,6 +45,7 @@ namespace PirateX.Deploy.Command
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("echo off");
             stringBuilder.AppendLine("net stop PirateX.Deploy.Agent");
+            stringBuilder.AppendLine($"7z d \"{downloadTask.Result}\" 7z.exe");
             stringBuilder.AppendLine($"7z x \"{downloadTask.Result}\" -y o\"{AppDomain.CurrentDomain.BaseDirectory}\"");
             stringBuilder.AppendLine($"net start PirateX.Deploy.Agent");
 
@@ -61,20 +62,28 @@ namespace PirateX.Deploy.Command
             string msg = "===updating self===";
             Send(msg);
             Thread.Sleep(3000);
-            Session?.Close();
-            Session?.AppServer.Stop(); //这里必须加上，不然40001端口还在Listen状态（有可能不是，但是新的监听不了），更新后开启的DeployServer就不能监听了
-                                       //WithHandshake("update!");
+            //Session?.Close();
+            //Session?.AppServer.Stop(); //这里必须加上，不然40001端口还在Listen状态（有可能不是，但是新的监听不了），更新后开启的DeployServer就不能监听了
+            //WithHandshake("update!");
 
-            var psi = new ProcessStartInfo($"cmd.exe")
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false,
-                FileName = filename // $" \\\"{outpath}{Path.DirectorySeparatorChar}tools\" " //@"C:\Users\Jones.Zhao\Desktop\开启其它服务.bat"
-            };
+            Task.Factory.StartNew((inputfile) => {
 
-            var result = Process.Start(psi);
+                var psi = new ProcessStartInfo($"cmd.exe")
+                {
+                    CreateNoWindow = false,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = false,
+                    RedirectStandardError = false,
+                    FileName = Convert.ToString(inputfile),
+                    //Verb = "runas"
+                };
+
+                var result = Process.Start(psi);
+
+                result.WaitForExit();
+
+            },filename);
+
             //Process.Start(filename);
 
             return "updating... please don't wait here!";

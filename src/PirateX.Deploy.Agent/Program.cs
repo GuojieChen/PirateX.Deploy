@@ -30,7 +30,7 @@ namespace PirateX.Deploy.Agent
                     x.AddCommandLineDefinition("workspace", v => workspace = v);
                 });
 
-                x.RunAsLocalService();
+                x.RunAsLocalSystem();
             });
 
             Console.Read();
