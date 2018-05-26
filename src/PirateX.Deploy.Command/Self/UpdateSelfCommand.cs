@@ -1,5 +1,6 @@
 ﻿using Akka.Configuration.Hocon;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -53,7 +54,7 @@ namespace PirateX.Deploy.Command
 
             var bytes = Encoding.UTF8.GetBytes(content);
 
-            var filename = $"temp_{DateTime.Now.Ticks}.bat";
+            var filename = $"autoupdate.bat";
             using (var ms = File.Create(filename))
                 ms.Write(bytes, 0, bytes.Length);
 
@@ -63,7 +64,18 @@ namespace PirateX.Deploy.Command
             Session?.Close();
             Session?.AppServer.Stop(); //这里必须加上，不然40001端口还在Listen状态（有可能不是，但是新的监听不了），更新后开启的DeployServer就不能监听了
                                        //WithHandshake("update!");
-            Task.Run(()=>CommandExecutor.RunExeWithParam(filename,string.Empty));
+
+            var psi = new ProcessStartInfo($"cmd.exe")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false,
+                FileName = filename // $" \\\"{outpath}{Path.DirectorySeparatorChar}tools\" " //@"C:\Users\Jones.Zhao\Desktop\开启其它服务.bat"
+            };
+
+            var result = Process.Start(psi);
+            //Process.Start(filename);
 
             return "updating... please don't wait here!";
         }
