@@ -20,10 +20,13 @@ namespace PirateX.Deploy.Client
         private string[] commands = null;
         private string environment = string.Empty;
         private string machine;
-        private string secretkey = string.Empty;
-        public CommandProcessor(string url,string secretkey)
+
+        private Options _options;
+
+        public CommandProcessor(Options options)
         {
-            this.secretkey = secretkey;
+            _options = options;
+            string url = $"ws://{options.Host}:{options.Port}";
             ws = new WebSocket(url);
             ws.OnMessage += Ws_OnMessage;
             ws.OnClose += Ws_OnClose;
@@ -40,11 +43,11 @@ namespace PirateX.Deploy.Client
             Console.WriteLine("session closed!");
         }
 
-        public void Start(string cmdFileName, string environmentFileName, string machineName)
+        public void Start()
         {
             try
             {
-                string command = LoadFileContent(cmdFileName);
+                string command = LoadFileContent(_options.InputFile);
                 commands = command.Split(new[] { "##=##" }, StringSplitOptions.RemoveEmptyEntries);
                 commandCount = commands.Length;
                 if (commandCount <= 0)
@@ -53,8 +56,8 @@ namespace PirateX.Deploy.Client
                     return;
                 }
 
-                environment = LoadFileContent(environmentFileName);
-                machine = LoadFileContent(machineName);
+                environment = LoadFileContent(_options.EFile);
+                machine = LoadFileContent(_options.MFile);
                 if (!ws.IsAlive)
                 {
                     ws.Connect();
@@ -86,7 +89,12 @@ namespace PirateX.Deploy.Client
 
         private void Ws_OnMessage(object sender, MessageEventArgs e)
         {
-            if (e.Data == "===command operation end===")
+            if (e.Data == "===secretkey not match===")
+            {
+                Logger.Error("secretkey not match!");
+                commandCount = 0;
+            }
+            else if (e.Data == "===command operation end===")
             {
                 commandCount--;
                 if (commandCount > 0)
@@ -136,22 +144,22 @@ namespace PirateX.Deploy.Client
 
         private void SendCommand()
         {
+            var composeCmd = new ComposeCommand()
+            {
+                Command = commands[commandIndex],
+                Environment = environment,
+                SpecificMachine = machine
+            };
+            string cmdStr = EncryptDES(Serialize(composeCmd), _options.SecretKey.Substring(0, 8));
+
             try
             {
-                var composeCmd = new ComposeCommand()
-                {
-                    Command = commands[commandIndex],
-                    Environment = environment,
-                    SpecificMachine = machine
-                };
-                string cmdStr = EncryptDES(Serialize(composeCmd),secretkey.Substring(0,8));
-
                 ws.Send(cmdStr);
                 commandIndex++;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Logger.Error(ex);
             }
         }
 

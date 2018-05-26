@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using NLog;
 
 namespace PirateX.Deploy.Client
 {
+
     class Program
     {
         private static Logger Log = LogManager.GetCurrentClassLogger();
@@ -12,43 +14,17 @@ namespace PirateX.Deploy.Client
         //127.0.0.1 {secretkey} {template} {}
         static void Main(string[] args)
         {
-            int port = 40001;
-            string uri = $"127.0.0.1:{port}";
+            var options = new Options(args);
 
-            string cmdFileName = string.Empty;
-            string environmentFileName = string.Empty;
-            string machineName = string.Empty;
-            string secretkey = string.Empty;
-            if (args.Length >= 1)
-            {
-                uri = args[0];
-                if (uri.IndexOf(':') < 0)
-                    uri += $":{port}";
-            }
-
-            if (args.Length >= 2)
-            {
-                secretkey = args[1];
-            }
-            if (args.Length >= 3)
-            {
-                cmdFileName = args[2];
-            }
-            if (args.Length >= 4)
-            {
-                environmentFileName = args[3];
-            }
-            if (args.Length >= 5)
-            {
-                machineName = args[4];
-            }
+            string uri = $"{options.Host}:{options.Port}";
+            
             Log.Info("PirateX.Deploy.Client Started! Press Ctrl + C to exit");
             Console.CancelKeyPress += Console_CancelKeyPress;
 
             try
             {
-                cp = new CommandProcessor($"ws://{uri}",secretkey);
-                cp.Start(cmdFileName, environmentFileName, machineName);
+                cp = new CommandProcessor(options);
+                cp.Start();
             }
             catch(Exception e)
             {

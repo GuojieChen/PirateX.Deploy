@@ -46,7 +46,7 @@ namespace PirateX.Deploy.Command
             stringBuilder.AppendLine("echo off");
             stringBuilder.AppendLine("net stop PirateX.Deploy.Agent");
             stringBuilder.AppendLine($"7z d \"{downloadTask.Result}\" 7z.exe");
-            stringBuilder.AppendLine($"7z x \"{downloadTask.Result}\" -y o\"{AppDomain.CurrentDomain.BaseDirectory}\"");
+            stringBuilder.AppendLine($"7z x \"{downloadTask.Result}\" -y -o \"{AppDomain.CurrentDomain.BaseDirectory}\"");
             stringBuilder.AppendLine($"net start PirateX.Deploy.Agent");
 
             var content = stringBuilder.ToString();
