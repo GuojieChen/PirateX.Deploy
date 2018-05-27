@@ -60,7 +60,7 @@ help:""
 >Agent密钥: 2ef9ee233b064764bdff572fbb9c60ce
 
 ```shell
-PirateX.Deploy.Client 127.0.0.1 2ef9ee233b064764bdff572fbb9c60ce test.hn
+PirateX.Deploy.Client -h 127.0.0.1 -s 2ef9ee233b064764bdff572fbb9c60ce -i test.hn
 
 pause
 ```
