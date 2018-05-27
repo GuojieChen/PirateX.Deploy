@@ -1,5 +1,6 @@
 ﻿using Akka.Configuration.Hocon;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -27,8 +28,14 @@ namespace PirateX.Deploy.Command
 
             string para = $"{feedName} {groupName} {version} {credential} {progetSource}";
 
-
             var downloadTask = PackageGetCommand.DownLoadPackage(base.Session, feedName, groupName, packageName, version, credential, progetSource);
+
+            while (!downloadTask.IsCompleted)
+            {
+                base.Send("downloadTask not completed");
+
+                Thread.Sleep(1000);
+            }
 
             if (string.IsNullOrEmpty(downloadTask.Result))
                 return "download package fail!";
@@ -38,7 +45,8 @@ namespace PirateX.Deploy.Command
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("echo off");
             stringBuilder.AppendLine("net stop PirateX.Deploy.Agent");
-            stringBuilder.AppendLine($"7z x \"{downloadTask.Result}\" -y o \"{AppDomain.CurrentDomain.BaseDirectory}\"");
+            stringBuilder.AppendLine($"7z d \"{downloadTask.Result}\" 7z.exe");
+            stringBuilder.AppendLine($"7z x \"{downloadTask.Result}\" -y -o \"{AppDomain.CurrentDomain.BaseDirectory}\"");
             stringBuilder.AppendLine($"net start PirateX.Deploy.Agent");
 
             var content = stringBuilder.ToString();
@@ -47,17 +55,36 @@ namespace PirateX.Deploy.Command
 
             var bytes = Encoding.UTF8.GetBytes(content);
 
-            var filename = $"temp_{DateTime.Now.Ticks}.bat";
+            var filename = $"autoupdate.bat";
             using (var ms = File.Create(filename))
                 ms.Write(bytes, 0, bytes.Length);
 
             string msg = "===updating self===";
             Send(msg);
             Thread.Sleep(3000);
-            Session?.Close();
-            Session?.AppServer.Stop(); //这里必须加上，不然40001端口还在Listen状态（有可能不是，但是新的监听不了），更新后开启的DeployServer就不能监听了
-                                       //WithHandshake("update!");
-            Task.Run(()=>CommandExecutor.RunExeWithParam(filename,string.Empty));
+            //Session?.Close();
+            //Session?.AppServer.Stop(); //这里必须加上，不然40001端口还在Listen状态（有可能不是，但是新的监听不了），更新后开启的DeployServer就不能监听了
+            //WithHandshake("update!");
+
+            Task.Factory.StartNew((inputfile) => {
+
+                var psi = new ProcessStartInfo($"cmd.exe")
+                {
+                    CreateNoWindow = false,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = false,
+                    RedirectStandardError = false,
+                    FileName = Convert.ToString(inputfile),
+                    //Verb = "runas"
+                };
+
+                var result = Process.Start(psi);
+
+                result.WaitForExit();
+
+            },filename);
+
+            //Process.Start(filename);
 
             return "updating... please don't wait here!";
         }

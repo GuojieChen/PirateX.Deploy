@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="CommandProcessor.cs" />
     <Compile Include="ComposeCommand.cs" />
+    <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgressBar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

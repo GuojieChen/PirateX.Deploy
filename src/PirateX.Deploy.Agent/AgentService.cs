@@ -95,7 +95,7 @@ namespace PirateX.Deploy.Agent
             }
             catch
             {
-                session.Close();
+                session.Send("===secretkey not match===");
                 return;
             }
 
